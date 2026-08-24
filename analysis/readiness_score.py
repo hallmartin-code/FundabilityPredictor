@@ -1,4 +1,4 @@
-"""The Financing Readiness Score (0-100).
+"""The Fundability Score (0-100).
 
 Nine categories, each weighted by ``config/scoring_weights.yaml``. Inside a
 category, individual signals carry relative weights and are scored 0.0-1.0.
@@ -60,7 +60,7 @@ def score_readiness(
 
     total = round(sum(c.points for c in categories), 1)
     label = cfg.readiness_label(total)
-    LOGGER.info("Financing readiness score: %.1f/100 (%s)", total, label)
+    LOGGER.info("Fundability score: %.1f/100 (%s)", total, label)
     return ReadinessScore(total=total, label=label, categories=categories)
 
 

@@ -1,4 +1,4 @@
-"""Startup Financing Probability Predictor - command line interface.
+"""Fundability Predictor - command line interface.
 
     python app.py analyse deck.pdf
     python app.py review  deck.pdf --save-overrides overrides.json
@@ -259,7 +259,7 @@ def cmd_test_email(args: argparse.Namespace) -> int:
 
     result = service.send(
         EmailMessage(
-            subject="[TEST] Financing Probability Predictor - email configuration check",
+            subject="[TEST] Fundability Predictor - email configuration check",
             html=(
                 "<p>This is a configuration test from the Startup Financing Probability "
                 "Predictor.</p><p>If you received it, analysis result emails will arrive "
@@ -347,7 +347,7 @@ def _print_summary(result: AnalysisResult) -> None:
     print(f"  3 months   {final.p3:5.0f}%")
     print(f"  6 months   {final.p6:5.0f}%")
     print(f" 12 months   {final.p12:5.0f}%")
-    print(f"\nFinancing readiness  {result.readiness.total:.0f}/100  ({result.readiness.label})")
+    print(f"\nFundability score    {result.readiness.total:.0f}/100  ({result.readiness.label})")
     print(f"Prediction confidence {result.confidence.score:.0f}/100 ({result.confidence.level})")
     print(f"Comparable profile   {result.comparable.label}")
     print(f"{result.prediction.market_condition.disclosure}")

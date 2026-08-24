@@ -215,7 +215,7 @@ def _next_step(
 
     if fit_score >= 55 and readiness >= 55:
         return (
-            "QUALIFIED - Schedule financing readiness review",
+            "QUALIFIED - Schedule fundability review",
             f"Fit of {fit_score:.0f}/100 and readiness of {readiness:.0f}/100 support engagement "
             "once the outstanding gaps are reviewed.",
         )

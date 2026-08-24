@@ -97,7 +97,7 @@ what a company calls its round and what its numbers imply is itself a finding.
 PROBABILITY OF COMPLETING ROUND
 
  ┌──────────┐ ┌──────────┐ ┌──────────┐   ┌─────────────────────────┐
- │   XX%    │ │   XX%    │ │   XX%    │   │ FINANCING READINESS     │
+ │   XX%    │ │   XX%    │ │   XX%    │   │ FUNDABILITY             │
  │ 3 MONTHS │ │ 6 MONTHS │ │12 MONTHS │   │ XX /100                 │
  └──────────┘ └──────────┘ └──────────┘   │ [READINESS LABEL]       │
                                           │ CONFIDENCE  [LEVEL] (XX)│
@@ -110,7 +110,7 @@ remainder.
 | Slot | Domain | Format |
 | --- | --- | --- |
 | 3 / 6 / 12-month probability | 1–98 | `XX%`, 21pt bold, white on a colour-coded tile |
-| Financing readiness | 0–100 | `XX` at 15pt, `/100` at 8pt |
+| Fundability score | 0–100 | `XX` at 15pt, `/100` at 8pt |
 | `[READINESS LABEL]` | See below | 6.4pt bold, accent blue |
 | `[LEVEL]` | `HIGH` / `MEDIUM` / `LOW` | Colour-coded |
 | Confidence score | 0–100 | `(XX)` |
@@ -118,7 +118,7 @@ remainder.
 **Tile colour by probability:** ≥60 green `#1B7F4B` · 30–59 amber `#B7791F` ·
 <30 red `#B03A2E`.
 
-**Readiness labels** (fixed strings, band-mapped):
+**Fundability labels** (fixed strings, band-mapped):
 
 | Score | Label |
 | --- | --- |
@@ -242,7 +242,7 @@ Investor materials complete YES    Likely fundraising candidate NO
 Fit score 0–100. Recommended next step is one of five fixed strings:
 
 - `HIGH PRIORITY - Immediate fundraising discussion`
-- `QUALIFIED - Schedule financing readiness review`
+- `QUALIFIED - Schedule fundability review`
 - `NURTURE - Improve milestones before active outreach`
 - `EARLY - Reassess after additional traction`
 - `NOT CURRENTLY QUALIFIED`

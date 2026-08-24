@@ -1,4 +1,4 @@
-# Financing Readiness Score — category weights.
+# Fundability Score — category weights.
 # The nine categories sum to 100 points. Adjust freely; the scorer
 # renormalises each category's internal signals to the weight given here.
 version: 1

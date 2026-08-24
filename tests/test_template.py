@@ -7,6 +7,7 @@ renders through the real layout code, and that it contains no company data.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -37,7 +38,9 @@ def template_pdf(tmp_path_factory) -> Path:
 
 
 def _text(path: Path) -> str:
-    return "\n".join(page.extract_text() or "" for page in PdfReader(str(path)).pages)
+    """Extracted text with whitespace flattened (see test_pdf._page_text)."""
+    raw = "\n".join(page.extract_text() or "" for page in PdfReader(str(path)).pages)
+    return re.sub(r"\s+", " ", raw)
 
 
 # ---------------------------------------------------------------------------
@@ -62,14 +65,14 @@ def test_template_shows_placeholder_tokens_not_numbers(template_pdf):
 def test_template_keeps_every_fixed_section_heading(template_pdf):
     text = _text(template_pdf)
     for heading in (
-        "FINANCING PROBABILITY REPORT",
+        "FUNDABILITY REPORT",
         "PROBABILITY OF COMPLETING ROUND",
         "PROBABILITY DRIVERS",
         "CRITICAL BLOCKERS",
         "COMPARABLE FINANCING PROFILE",
         "FIVE ACTIONS TO INCREASE FUNDING PROBABILITY",
         "TEN CAPITAL ASSESSMENT",
-        "FINANCING READINESS",
+        "FUNDABILITY",
         "CONFIDENCE",
         "3 MONTHS",
         "6 MONTHS",

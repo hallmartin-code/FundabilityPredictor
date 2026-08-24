@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from pypdf import PdfReader
 
@@ -24,7 +26,14 @@ def _render(result, tmp_path, name="report.pdf", page="LETTER"):
 
 
 def _page_text(path) -> str:
-    return "\n".join(page.extract_text() or "" for page in PdfReader(str(path)).pages)
+    """Extracted text with whitespace flattened.
+
+    A required phrase that happens to wrap across two lines is still present
+    in the document; asserting against raw extraction would fail on a layout
+    change alone, which is not what these tests are checking.
+    """
+    raw = "\n".join(page.extract_text() or "" for page in PdfReader(str(path)).pages)
+    return re.sub(r"\s+", " ", raw)
 
 
 # ---------------------------------------------------------------------------
@@ -98,7 +107,7 @@ def test_all_required_sections_appear(saas_result, tmp_path):
         "COMPARABLE FINANCING PROFILE",
         "FIVE ACTIONS TO INCREASE FUNDING PROBABILITY",
         "TEN CAPITAL ASSESSMENT",
-        "FINANCING READINESS",
+        "FUNDABILITY",
         "CONFIDENCE",
     ):
         assert heading in text, f"missing section: {heading}"

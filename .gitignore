@@ -11,3 +11,6 @@ env/
 output/
 *.egg-info/
 .DS_Store
+
+# Cached variable fonts used only when rebuilding the static brand fonts
+assets/fonts/.var-cache/

@@ -147,7 +147,7 @@ def render_html(result: AnalysisResult, path: Path) -> Path:
   <h2>Probability of Completing Round</h2>
   <div class="tiles">{tiles}
     <div class="badge">
-      <div style="font-size:10px;color:#7A8699">FINANCING READINESS</div>
+      <div style="font-size:10px;color:#7A8699">FUNDABILITY</div>
       <div class="s">{result.readiness.total:.0f}<span style="font-size:13px;color:#4A5568">/100</span></div>
       <div style="font-size:11px;font-weight:700;color:#1F4E79">{_e(result.readiness.label)}</div>
       <div style="font-size:11px;margin-top:6px;color:#4A5568">Confidence

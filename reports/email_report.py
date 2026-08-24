@@ -207,7 +207,7 @@ def build_html(result: AnalysisResult, attachment_names: list[str]) -> str:
   <tr><td style="padding:0 24px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       {_section("Assessment", f'<table role="presentation" cellpadding="0" cellspacing="0" border="0">' + _facts_rows([
-          ("Financing readiness", f"{result.readiness.total:.0f}/100 - {result.readiness.label}"),
+          ("Fundability score", f"{result.readiness.total:.0f}/100 - {result.readiness.label}"),
           ("Prediction confidence", f"{result.confidence.level} ({result.confidence.score:.0f}/100)"),
           ("Comparable profile", result.comparable.label),
           ("TEN Capital fit", f"{result.ten_capital.fit_score:.0f}/100"),
@@ -285,7 +285,7 @@ def build_text(result: AnalysisResult, attachment_names: list[str]) -> str:
         f"   6 months   {final.p6:5.0f}%",
         f"  12 months   {final.p12:5.0f}%",
         "",
-        f"Financing readiness    {result.readiness.total:.0f}/100 ({result.readiness.label})",
+        f"Fundability score      {result.readiness.total:.0f}/100 ({result.readiness.label})",
         f"Prediction confidence  {result.confidence.score:.0f}/100 ({result.confidence.level})",
         f"Comparable profile     {result.comparable.label}",
         f"TEN Capital fit        {result.ten_capital.fit_score:.0f}/100",

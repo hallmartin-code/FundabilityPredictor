@@ -1,4 +1,4 @@
-# Startup Financing Probability Predictor
+# Fundability Predictor
 
 Reads an investor pitch deck (PDF, PPTX or PPT), extracts the company and
 financing facts it can evidence, and estimates the probability that the company
@@ -118,13 +118,13 @@ changed:
 
 ```
 deck -> extraction -> derived values -> sector + stage
-     -> Financing Readiness Score (0-100)
+     -> Fundability Score (0-100)
      -> baseline probability band
      -> signal adjustments -> sector modifier -> market environment
      -> clamp (1-98%) -> monotonicity (3m <= 6m <= 12m)
 ```
 
-### 1. Financing Readiness Score
+### 1. Fundability Score
 
 Nine weighted categories, all configurable in
 [`config/scoring_weights.yaml`](config/scoring_weights.yaml):
@@ -141,7 +141,7 @@ Nine weighted categories, all configurable in
 | Investor Fit | 10 |
 | Fundraising Readiness | 5 |
 
-Score bands map to labels: **HIGHLY FINANCEABLE** (85+), **FINANCING READY**
+The Fundability Score bands map to labels: **HIGHLY FINANCEABLE** (85+), **FINANCING READY**
 (70-84), **NEARLY READY** (55-69), **MATERIAL GAPS** (40-54),
 **EARLY / HIGH RISK** (0-39). These describe *fundraising readiness*, not
 investment quality.
@@ -252,7 +252,8 @@ analysis/
   ten_capital_fit.py       flags, fit score, next step
 reports/
   pdf_report.py            one-page renderer
-  theme.py                 palette and the density ladder
+  theme.py                 brand palette, typography and the density ladder
+  fonts.py                 brand font registration with Helvetica fallback
   json_report.py           lead record and evidence map
   html_report.py           HTML companion for review
 services/llm.py            Claude extraction + quote verification (Null by default)
@@ -266,7 +267,7 @@ web/
   templates/               upload form and progress/results page
 sample_data/               deck generator and generated samples
 docs/                      document structure template and companions
-tests/                     344 tests
+tests/                     359 tests
 ```
 
 ---
@@ -447,6 +448,44 @@ heading, flag label and disclaimer, and contains no company data.
 
 ---
 
+## Report branding
+
+The downloadable PDF is **ink on paper** — a light document, because an
+investor one-pager gets printed and forwarded. The TEN Capital brand shows up
+where it reads on white stock:
+
+* the **TEN Capital lockup** in the navy header band, with the report label
+  beneath it, and again in the footer per the TEN Capital document standard;
+* the **tri-colour accent rule** (coral → amber → teal) from the logo mark,
+  capping the header;
+* **Sora** for display, **Inter** for body and **JetBrains Mono** for labels.
+
+The logo ships in two variants because the supplied mark sets its wordmark in
+near-black ink: that reads on the white body but disappears on the navy band.
+[`assets/make_light_logo.py`](assets/make_light_logo.py) lifts the ink to
+`#F3F6FA` while leaving the three coloured figures alone, and each surface
+draws the variant that is legible on it.
+
+**Static brand fonts** live in `assets/fonts/`. Google publishes Sora, Inter
+and JetBrains Mono only as *variable* fonts, and ReportLab renders a variable
+font at its default instance — every weight would come out Regular and the
+hierarchy would collapse silently. The statics are instanced at real weights
+with fontTools ([`assets/make_fonts.py`](assets/make_fonts.py)); all three are
+SIL Open Font License. A test asserts Bold and Regular have different metrics,
+so a failed instancing cannot pass unnoticed.
+
+If the fonts or the light logo go missing, the renderer falls back to
+Helvetica and the supplied mark, and the report still comes out correct — just
+unbranded. That is the right failure mode for a deployment that lost an asset.
+
+The web app keeps the dark navy treatment from the brand design; the PDF is
+its light counterpart. To restyle either, edit
+[`reports/theme.py`](reports/theme.py) or
+[`web/static/app.css`](web/static/app.css) — the analysis is untouched by
+layout changes.
+
+---
+
 ## Keeping the report on one page
 
 The renderer builds the report at the roomiest layout, measures it, and steps
@@ -484,7 +523,7 @@ Environment settings are documented in [`.env.example`](.env.example).
 ## Tests
 
 ```bash
-python -m pytest -q                                    # 344 tests
+python -m pytest -q                                    # 359 tests
 python -m pytest --cov=. --cov-report=term-missing     # with coverage
 ```
 

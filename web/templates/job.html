@@ -136,7 +136,7 @@
     });
 
     const facts = el('facts');
-    kv(facts, 'Financing readiness', `${Math.round(s.readiness)}/100 — ${s.readiness_label}`);
+    kv(facts, 'Fundability score', `${Math.round(s.readiness)}/100 — ${s.readiness_label}`);
     kv(facts, 'Prediction confidence', `${s.confidence_level} (${Math.round(s.confidence)}/100)`);
     kv(facts, 'Comparable profile', s.comparable);
     kv(facts, 'TEN Capital fit', `${Math.round(s.fit_score)}/100`);

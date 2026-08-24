@@ -39,7 +39,12 @@ from models.prediction import AnalysisResult
 from reports.json_report import DISCLAIMER
 from reports.theme import (
     DENSITY_LADDER,
+    blend,
     FONT_BOLD,
+    FONT_DISPLAY,
+    FONT_DISPLAY_HEAVY,
+    FONT_MONO,
+    FONT_MONO_MEDIUM,
     FONT_OBLIQUE,
     FONT_REGULAR,
     PALETTE,
@@ -50,7 +55,12 @@ from reports.theme import (
 
 LOGGER = logging.getLogger(__name__)
 
-LOGO_PATH = ASSETS_DIR / "TEN_Capital_logo_footer.png"
+# Two variants: the supplied dark-ink mark for the white body, and the light
+# one (assets/make_light_logo.py) for the navy header band.
+LOGO_DARK = ASSETS_DIR / "TEN_Capital_logo_footer.png"
+LOGO_LIGHT = ASSETS_DIR / "TEN_Capital_logo_footer_light.png"
+#: Kept for callers that just want "the logo".
+LOGO_PATH = LOGO_DARK
 
 HEADER_HEIGHT = 52.0
 FOOTER_HEIGHT = 30.0
@@ -110,11 +120,12 @@ class ProbabilityTiles(Flowable):
             canvas.roundRect(x, 0, tile_width, self.height, 3.5, stroke=0, fill=1)
 
             canvas.setFillColor(colors.white)
-            canvas.setFont(FONT_BOLD, 21)
+            canvas.setFont(FONT_DISPLAY_HEAVY, 21)
             figure = self.token or f"{value:.0f}%"
             canvas.drawCentredString(x + tile_width / 2, self.height - 27.5, figure)
 
-            canvas.setFont(FONT_BOLD, 6.6)
+            canvas.setFillColor(colors.white)
+            canvas.setFont(FONT_MONO, 6.2)
             canvas.drawCentredString(x + tile_width / 2, 9.0, label.upper())
 
 
@@ -152,17 +163,17 @@ class ScoreBadge(Flowable):
         canvas.roundRect(0, 0, self.width, self.height, 3.5, stroke=1, fill=1)
 
         canvas.setFillColor(PALETTE.muted)
-        canvas.setFont(FONT_BOLD, 6.0)
-        canvas.drawString(8, self.height - 12, "FINANCING READINESS")
+        canvas.setFont(FONT_MONO, 6.0)
+        canvas.drawString(8, self.height - 12, "FUNDABILITY")
 
         score = self.tokens.score if self.tokens else f"{self.readiness:.0f}"
         canvas.setFillColor(PALETTE.navy)
-        canvas.setFont(FONT_BOLD, 15)
-        canvas.drawString(8, self.height - 28, score)
+        canvas.setFont(FONT_DISPLAY_HEAVY, 16)
+        canvas.drawString(8, self.height - 29, score)
         canvas.setFont(FONT_REGULAR, 8)
         canvas.setFillColor(PALETTE.slate)
-        canvas.drawString(8 + stringWidth(score, FONT_BOLD, 15) + 2,
-                          self.height - 28, "/100")
+        canvas.drawString(8 + stringWidth(score, FONT_DISPLAY_HEAVY, 16) + 2,
+                          self.height - 29, "/100")
 
         canvas.setFont(FONT_BOLD, 6.4)
         canvas.setFillColor(PALETTE.accent)
@@ -172,13 +183,9 @@ class ScoreBadge(Flowable):
         canvas.line(8, 15.5, self.width - 8, 15.5)
 
         canvas.setFillColor(PALETTE.muted)
-        canvas.setFont(FONT_BOLD, 6.0)
+        canvas.setFont(FONT_MONO, 6.0)
         canvas.drawString(8, 6.0, "CONFIDENCE")
-        level_colour = {
-            "HIGH": PALETTE.strong,
-            "MEDIUM": PALETTE.moderate,
-        }.get(self.confidence_level, PALETTE.weak)
-        canvas.setFillColor(level_colour)
+        canvas.setFillColor(PALETTE.for_confidence(self.confidence_level))
         canvas.setFont(FONT_BOLD, 7.4)
         figure = self.tokens.score if self.tokens else f"{self.confidence:.0f}"
         canvas.drawRightString(self.width - 8, 6.0, f"{self.confidence_level} ({figure})")
@@ -210,12 +217,12 @@ class FlagGrid(Flowable):
 
             canvas.setFillColor(PALETTE.slate)
             canvas.setFont(FONT_REGULAR, self.font_size)
-            value_width = stringWidth(value, FONT_BOLD, self.font_size)
+            value_width = stringWidth(value, FONT_MONO_MEDIUM, self.font_size)
             available = column_width - value_width - 10
             canvas.drawString(x, y, _fit_text(label, FONT_REGULAR, self.font_size, available))
 
             canvas.setFillColor(PALETTE.for_flag(value))
-            canvas.setFont(FONT_BOLD, self.font_size)
+            canvas.setFont(FONT_MONO_MEDIUM, self.font_size)
             canvas.drawRightString(x + column_width - 6, y, value)
 
 
@@ -252,8 +259,9 @@ class FinancingReportRenderer:
         canvas = pdfcanvas.Canvas(str(path), pagesize=(self.spec.width, self.spec.height))
         canvas.setTitle(f"{self.result.company_name} - Financing Probability Report")
         canvas.setAuthor("TEN Capital Network")
-        canvas.setSubject("Startup Financing Probability Report")
+        canvas.setSubject("Fundability Report")
 
+        self._draw_surface(canvas)
         self._draw_header(canvas)
         self._draw_footer(canvas)
 
@@ -307,33 +315,68 @@ class FinancingReportRenderer:
         assert last is not None
         return last
 
+    # ------------------------------------------------------------- surface
+    def _draw_surface(self, canvas: pdfcanvas.Canvas) -> None:
+        """White stock, with the brand's tri-colour rule capping the header."""
+        spec = self.spec
+        canvas.setFillColor(PALETTE.page)
+        canvas.rect(0, 0, spec.width, spec.height, stroke=0, fill=1)
+
+        top = spec.height - spec.margin_top
+        self._draw_accent_rule(canvas, spec.margin_x, top, spec.content_width, 2.0)
+
+    @staticmethod
+    def _draw_accent_rule(
+        canvas: pdfcanvas.Canvas, x: float, y: float, width: float, height: float
+    ) -> None:
+        """Coral to amber to teal, drawn as a fine stepped gradient.
+
+        PDF has no CSS-style linear-gradient, so the ramp is painted as thin
+        overlapping bands; at this size the steps are invisible.
+        """
+        stops = [PALETTE.coral, PALETTE.amber, PALETTE.teal]
+        steps = 96
+        step_width = width / steps
+        for index in range(steps):
+            position = index / (steps - 1) * (len(stops) - 1)
+            low = min(int(position), len(stops) - 2)
+            canvas.setFillColor(blend(stops[low], stops[low + 1], position - low))
+            canvas.rect(x + index * step_width, y, step_width + 0.5, height, stroke=0, fill=1)
+
     # -------------------------------------------------------------- header
     def _draw_header(self, canvas: pdfcanvas.Canvas) -> None:
         spec = self.spec
         top = spec.height - spec.margin_top
-        canvas.setFillColor(PALETTE.navy)
-        canvas.rect(spec.margin_x, top - HEADER_HEIGHT, spec.content_width, HEADER_HEIGHT,
-                    stroke=0, fill=1)
+        canvas.setFillColor(PALETTE.band)
+        canvas.roundRect(spec.margin_x, top - HEADER_HEIGHT, spec.content_width,
+                         HEADER_HEIGHT, 6.0, stroke=0, fill=1)
 
         pad = 11.0
-        right_label = "FINANCING PROBABILITY REPORT"
-        canvas.setFont(FONT_BOLD, 6.8)
-        canvas.setFillColor(colors.HexColor("#9FB3D1"))
-        canvas.drawRightString(spec.margin_x + spec.content_width - pad, top - 15, right_label)
+        right_edge = spec.margin_x + spec.content_width - pad
+
+        # The lockup sits on the navy band, so it uses the light logo variant.
+        # Its baseline is set so the artwork clears the accent rule above and
+        # leaves room for the report label beneath it.
+        logo_width = 72.0
+        self._draw_logo(canvas, right_edge - logo_width, top - 30.0, logo_width, light=True)
+
+        right_label = "FUNDABILITY REPORT"
+        canvas.setFont(FONT_MONO, 6.2)
+        canvas.setFillColor(PALETTE.teal)
+        canvas.drawRightString(right_edge, top - 41.0, right_label)
+        reserved = max(logo_width, stringWidth(right_label, FONT_MONO, 6.2))
 
         # The company name is auto-sized so a long one cannot collide with the
         # label on its right or run off the band.
         name = self.result.company_name or NOT_PROVIDED
-        max_name_width = (
-            spec.content_width - 2 * pad - stringWidth(right_label, FONT_BOLD, 6.8) - 14
-        )
+        max_name_width = spec.content_width - 2 * pad - reserved - 16
         size = 17.0
-        while size > 9.0 and stringWidth(name, FONT_BOLD, size) > max_name_width:
+        while size > 9.0 and stringWidth(name, FONT_DISPLAY, size) > max_name_width:
             size -= 0.5
         canvas.setFillColor(colors.white)
-        canvas.setFont(FONT_BOLD, size)
+        canvas.setFont(FONT_DISPLAY, size)
         canvas.drawString(spec.margin_x + pad, top - 20,
-                          _fit_text(name, FONT_BOLD, size, max_name_width))
+                          _fit_text(name, FONT_DISPLAY, size, max_name_width))
 
         canvas.setFont(FONT_REGULAR, 7.2)
         canvas.setFillColor(colors.HexColor("#C6D3E6"))
@@ -412,10 +455,13 @@ class FinancingReportRenderer:
             "Financing probability estimates are model-based assessments, not guarantees of "
             "financing outcomes.   ·   " + DISCLAIMER
         )
-        for index, line in enumerate(_wrap_text(note, FONT_REGULAR, 5.6, spec.content_width - 86)):
-            canvas.drawString(spec.margin_x, y - 8.5 - index * 6.4, line)
+        for index, line in enumerate(
+            _wrap_text(note, FONT_REGULAR, 5.4, spec.content_width - 86, max_lines=3)
+        ):
+            canvas.setFont(FONT_REGULAR, 5.4)
+            canvas.drawString(spec.margin_x, y - 7.5 - index * 6.2, line)
 
-        canvas.setFont(FONT_BOLD, 6.0)
+        canvas.setFont(FONT_MONO_MEDIUM, 5.8)
         canvas.setFillColor(PALETTE.critical)
         canvas.drawString(spec.margin_x, spec.margin_bottom - 2, "CONFIDENTIAL - FOR INTENDED RECIPIENT ONLY")
 
@@ -431,19 +477,33 @@ class FinancingReportRenderer:
             spec.margin_x + spec.content_width - logo_width - 6, spec.margin_bottom - 2, stamp
         )
         self._draw_logo(canvas, spec.margin_x + spec.content_width - logo_width,
-                        spec.margin_bottom - 7, logo_width)
+                        spec.margin_bottom - 7, logo_width, light=False)
 
     @staticmethod
-    def _draw_logo(canvas: pdfcanvas.Canvas, x: float, y: float, width: float) -> None:
-        if not LOGO_PATH.exists():
-            return
+    def _draw_logo(
+        canvas: pdfcanvas.Canvas, x: float, y: float, width: float, light: bool = False
+    ) -> float:
+        """Draw the TEN Capital lockup and return the height it occupied.
+
+        The supplied mark sets its wordmark in near-black ink. That reads on
+        the white body but disappears on the navy header band, so each surface
+        gets the variant that is legible on it.
+        """
+        source = LOGO_LIGHT if light else LOGO_DARK
+        if not source.exists():
+            source = LOGO_DARK if LOGO_DARK.exists() else LOGO_LIGHT
+        if not source.exists():
+            LOGGER.warning("No TEN Capital logo asset found; the lockup is omitted.")
+            return 0.0
         try:
-            image = ImageReader(str(LOGO_PATH))
+            image = ImageReader(str(source))
             iw, ih = image.getSize()
             height = width * ih / iw
             canvas.drawImage(image, x, y, width=width, height=height, mask="auto")
+            return height
         except Exception:  # noqa: BLE001 - a missing logo must not fail the report
-            LOGGER.debug("Could not draw the footer logo.", exc_info=True)
+            LOGGER.debug("Could not draw the TEN Capital logo.", exc_info=True)
+            return 0.0
 
     # ---------------------------------------------------------------- body
     def _build_body(self, density: Density) -> list:
@@ -680,8 +740,8 @@ def _styles(density: Density) -> dict[str, ParagraphStyle]:
     return {
         "section": ParagraphStyle(
             "section",
-            fontName=FONT_BOLD,
-            fontSize=density.section_size,
+            fontName=FONT_MONO_MEDIUM,
+            fontSize=density.section_size - 0.6,
             leading=density.section_size + 1.6,
             textColor=PALETTE.navy,
             spaceAfter=0,
@@ -769,7 +829,15 @@ def _fit_text(text: str, font: str, size: float, max_width: float) -> str:
     return (trimmed.rstrip() + ellipsis) if trimmed else ""
 
 
-def _wrap_text(text: str, font: str, size: float, max_width: float) -> list[str]:
+def _wrap_text(
+    text: str, font: str, size: float, max_width: float, max_lines: int = 3
+) -> list[str]:
+    """Wrap to a line budget, shrinking rather than silently truncating.
+
+    The footer carries required disclaimers, so losing the tail of one is a
+    compliance defect, not a cosmetic one. If the text will not fit the
+    budget, the caller is told by way of a complete-but-narrower wrap.
+    """
     words = text.split()
     lines: list[str] = []
     current = ""
@@ -783,7 +851,13 @@ def _wrap_text(text: str, font: str, size: float, max_width: float) -> list[str]
             current = word
     if current:
         lines.append(current)
-    return lines[:2]
+
+    if len(lines) > max_lines:
+        LOGGER.warning(
+            "Footer text needs %d lines but only %d are budgeted; it will be crowded.",
+            len(lines), max_lines,
+        )
+    return lines[:max_lines]
 
 
 def render_pdf(

@@ -95,7 +95,7 @@ async def lifespan(app: FastAPI):  # noqa: ANN201
 
 
 app = FastAPI(
-    title="Startup Financing Probability Predictor",
+    title="Fundability Predictor",
     description="Upload a pitch deck; get a one-page financing probability report.",
     version="1.0",
     lifespan=lifespan,
