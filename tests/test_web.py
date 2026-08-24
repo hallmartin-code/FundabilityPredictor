@@ -17,8 +17,7 @@ from web.jobs import JobRegistry, JobState
 
 @pytest.fixture()
 def client(tmp_path, monkeypatch):
-    """A client with an isolated job directory and no access password."""
-    monkeypatch.delenv("FP_ACCESS_PASSWORD", raising=False)
+    """A client with an isolated job directory and the LLM switched off."""
     monkeypatch.setenv("FP_LLM_ENABLED", "off")
     monkeypatch.setattr(web_main, "registry", JobRegistry(tmp_path / "jobs"))
     with TestClient(web_main.app) as test_client:
@@ -87,7 +86,6 @@ def test_index_names_the_configured_recipient_when_email_is_on(tmp_path, monkeyp
     monkeypatch.setenv("RESEND_API_KEY", "re_test_key")
     monkeypatch.setenv("FP_EMAIL_ENABLED", "on")
     monkeypatch.setenv("FP_EMAIL_TO", "Info@tencapital.group")
-    monkeypatch.delenv("FP_ACCESS_PASSWORD", raising=False)
     monkeypatch.setattr(web_main, "registry", JobRegistry(tmp_path / "jobs"))
     with TestClient(web_main.app) as client:
         assert "Info@tencapital.group" in client.get("/").text
@@ -270,29 +268,18 @@ def test_job_state_messages_cover_every_state():
 
 
 # ---------------------------------------------------------------------------
-# Access control
+# No authentication
 # ---------------------------------------------------------------------------
-def test_password_gate_blocks_and_then_admits(tmp_path, monkeypatch):
-    monkeypatch.setenv("FP_ACCESS_PASSWORD", "let-me-in")
-    monkeypatch.setenv("FP_LLM_ENABLED", "off")
-    monkeypatch.setattr(web_main, "registry", JobRegistry(tmp_path / "jobs"))
-
-    with TestClient(web_main.app) as client:
-        # The index redirects to the login form.
-        assert client.get("/", follow_redirects=False).status_code == 303
-        # The API refuses without the cookie.
-        assert client.get("/api/job/anything").status_code == 401
-
-        assert client.post("/login", data={"password": "wrong"}).status_code == 401
-        assert client.post(
-            "/login", data={"password": "let-me-in"}, follow_redirects=False
-        ).status_code == 303
-        # The cookie now admits the client.
-        assert client.get("/").status_code == 200
+def test_no_login_route_exists(client):
+    """The password gate was removed; nothing should redirect to one."""
+    assert client.get("/login").status_code == 404
+    assert client.get("/", follow_redirects=False).status_code == 200
 
 
-def test_healthcheck_is_reachable_behind_the_password_gate(tmp_path, monkeypatch):
-    monkeypatch.setenv("FP_ACCESS_PASSWORD", "let-me-in")
-    monkeypatch.setattr(web_main, "registry", JobRegistry(tmp_path / "jobs"))
-    with TestClient(web_main.app) as client:
-        assert client.get("/healthz").status_code == 200
+def test_every_endpoint_is_reachable_without_credentials(client, saas_deck):
+    """Deliberate: the service is open to anyone who can reach it."""
+    job_id = _upload(client, saas_deck).json()["job_id"]
+    _wait(client, job_id)
+    for path in ("/", "/healthz", f"/job/{job_id}", f"/api/job/{job_id}",
+                 f"/download/{job_id}/pdf"):
+        assert client.get(path).status_code == 200, path

@@ -11,6 +11,10 @@ Two deployment facts shape the design:
   browser polls. Holding the request open would hit a proxy timeout.
 * Uploaded decks are confidential. They live in a per-job directory that is
   deleted when the job expires, and nothing is written outside it.
+
+There is no authentication: any caller who can reach the service can spend
+Claude and Resend credits on it. Put it behind a private network, a proxy that
+authenticates, or a Railway private service if that matters.
 """
 
 from __future__ import annotations
@@ -18,14 +22,13 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-import secrets
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 from tempfile import mkdtemp
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -135,29 +138,6 @@ async def _purge_loop() -> None:
             LOGGER.exception("Job purge failed.")
 
 
-# ---------------------------------------------------------------------------
-# Access control
-# ---------------------------------------------------------------------------
-def _access_password() -> str | None:
-    value = os.getenv("FP_ACCESS_PASSWORD", "").strip()
-    return value or None
-
-
-def require_access(request: Request) -> None:
-    """Optional shared-password gate.
-
-    A deployed instance spends money on every analysis, so an unauthenticated
-    public URL is an open billing endpoint. Setting FP_ACCESS_PASSWORD closes
-    it; leaving it unset keeps local development frictionless.
-    """
-    expected = _access_password()
-    if not expected:
-        return
-    supplied = request.cookies.get("fp_access", "")
-    if not secrets.compare_digest(supplied, expected):
-        raise HTTPException(status_code=401, detail="Access password required.")
-
-
 def _llm_enabled() -> bool:
     return RuntimeSettings.from_env().llm_enabled
 
@@ -171,43 +151,12 @@ async def healthz() -> JSONResponse:
     return JSONResponse({"status": "ok", "llm": _llm_enabled()})
 
 
-@app.get("/login", response_class=HTMLResponse, response_model=None)
-async def login_form(request: Request):
-    if not _access_password():
-        return RedirectResponse("/", status_code=303)
-    return templates.TemplateResponse(request, "login.html", {**_template_context(), "error": None})
-
-
-# response_model=None because this returns either a redirect or a re-rendered
-# form, and FastAPI cannot build a response model from that union.
-@app.post("/login", response_model=None)
-async def login(request: Request, password: str = Form("")) -> RedirectResponse | HTMLResponse:
-    expected = _access_password()
-    if not expected:
-        return RedirectResponse("/", status_code=303)
-    if not secrets.compare_digest(password, expected):
-        return templates.TemplateResponse(
-            request,
-            "login.html",
-            {**_template_context(), "error": "Incorrect password."},
-            status_code=401,
-        )
-    response = RedirectResponse("/", status_code=303)
-    response.set_cookie(
-        "fp_access", expected, httponly=True, samesite="lax",
-        secure=request.url.scheme == "https", max_age=12 * 3600,
-    )
-    return response
-
-
 @app.get("/", response_class=HTMLResponse, response_model=None)
 async def index(request: Request):
-    if _access_password() and request.cookies.get("fp_access", "") != _access_password():
-        return RedirectResponse("/login", status_code=303)
     return templates.TemplateResponse(request, "index.html", _template_context())
 
 
-@app.post("/analyse", dependencies=[Depends(require_access)])
+@app.post("/analyse")
 async def start_analysis(
     request: Request,
     deck: UploadFile = File(...),
@@ -257,7 +206,7 @@ async def start_analysis(
     return JSONResponse({"job_id": job.id, "poll": f"/api/job/{job.id}"}, status_code=202)
 
 
-@app.get("/job/{job_id}", response_class=HTMLResponse, dependencies=[Depends(require_access)])
+@app.get("/job/{job_id}", response_class=HTMLResponse)
 async def job_page(request: Request, job_id: str) -> HTMLResponse:
     job = registry.get(job_id)
     if not job:
@@ -269,7 +218,7 @@ async def job_page(request: Request, job_id: str) -> HTMLResponse:
     )
 
 
-@app.get("/api/job/{job_id}", dependencies=[Depends(require_access)])
+@app.get("/api/job/{job_id}")
 async def job_status(job_id: str) -> JSONResponse:
     job = registry.get(job_id)
     if not job:
@@ -277,7 +226,7 @@ async def job_status(job_id: str) -> JSONResponse:
     return JSONResponse(job.as_dict())
 
 
-@app.get("/download/{job_id}/{kind}", dependencies=[Depends(require_access)])
+@app.get("/download/{job_id}/{kind}")
 async def download(job_id: str, kind: str) -> FileResponse:
     job = registry.get(job_id)
     if not job:

@@ -263,7 +263,7 @@ web/
   main.py                  FastAPI app: upload, poll, download
   jobs.py                  background job registry with TTL cleanup
   static/app.css           TEN Capital design system
-  templates/               upload form, progress/results page, login
+  templates/               upload form and progress/results page
 sample_data/               deck generator and generated samples
 docs/                      document structure template and companions
 tests/                     344 tests
@@ -381,24 +381,24 @@ at a shared inbox.
 railway init
 railway variables --set ANTHROPIC_API_KEY=sk-ant-... \
                   --set FP_LLM_ENABLED=on \
-                  --set FP_ACCESS_PASSWORD=choose-a-password
+                  --set RESEND_API_KEY=re_... \
+                  --set FP_EMAIL_ENABLED=on
 railway up
 ```
 
 `railway.json` sets the start command and points the health check at
 `/healthz`. Nixpacks reads `requirements.txt` and `.python-version`.
 
-**Set `FP_ACCESS_PASSWORD` on any public deployment.** Every analysis calls a
-paid API, so an unauthenticated public URL is an open billing endpoint. With it
-set, the app puts a shared-password gate in front of everything except the
-health check.
+**The app has no authentication.** Anyone who can reach the URL can upload a
+deck, and every analysis spends Claude and Resend credits on your account. If
+that matters, put it behind a Railway private service, a VPN, or an
+authenticating proxy — the application itself will not stop anyone.
 
 | Variable | Purpose |
 | --- | --- |
 | `ANTHROPIC_API_KEY` | Required for Claude extraction. Never commit it |
 | `FP_LLM_ENABLED` | `on` to enable extraction, `off` for rules only |
 | `FP_LLM_MODEL` / `FP_LLM_EFFORT` | Model and effort (default `claude-opus-5`, `high`) |
-| `FP_ACCESS_PASSWORD` | Shared password gate |
 | `FP_MAX_UPLOAD_MB` | Upload ceiling (default 40) |
 | `FP_MAX_CONCURRENT` | Simultaneous analyses (default 2) |
 | `FP_JOB_DIR` | Where uploads live before expiry (default: a temp dir) |
