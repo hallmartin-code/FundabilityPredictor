@@ -388,7 +388,10 @@ railway up
 ```
 
 `railway.json` sets the start command and points the health check at
-`/healthz`. Nixpacks reads `requirements.txt` and `.python-version`.
+`/healthz`. Nixpacks auto-detects Python from `requirements.txt` and
+`.python-version` — do **not** add a `nixpacks.toml` that overrides
+`[phases.install]`, because that replaces the phase which creates the
+`/opt/venv` virtualenv, and the build fails within seconds.
 
 **The app has no authentication.** Anyone who can reach the URL can upload a
 deck, and every analysis spends Claude and Resend credits on your account. If
@@ -416,9 +419,17 @@ Two deployment constraints worth knowing:
   and deleted when the job expires after 30 minutes, along with the generated
   reports. Nothing is written outside that directory.
 
-Legacy `.ppt` needs LibreOffice, which is commented out in `nixpacks.toml`
-because it adds ~500MB. Without it the app returns a clear "re-save as .pptx or
-.pdf" error rather than failing silently.
+Legacy `.ppt` needs LibreOffice on the image, which adds roughly 500MB. To
+enable it, add a `nixpacks.toml` that *extends* the setup phase rather than
+replacing the install phase — the `"..."` entry preserves the defaults:
+
+```toml
+[phases.setup]
+nixPkgs = ["...", "libreoffice"]
+```
+
+Without it the app returns a clear "re-save as .pptx or .pdf" error rather
+than failing silently.
 
 ---
 
