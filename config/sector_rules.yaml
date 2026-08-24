@@ -1,0 +1,300 @@
+# Sector rules, stage benchmarks and sector-specific probability modifiers.
+#
+# `traction_mode` decides how the Traction & Revenue category is scored:
+#   revenue   - commercial revenue is the expected proof point (SaaS, FinTech)
+#   milestone - technical/clinical/regulatory milestones are the proof point
+#               (Biotech, Life Sciences); pre-revenue is NORMAL, not a penalty
+#   hybrid    - early commercial revenue plus milestone evidence (MedTech,
+#               DeepTech, Hardware, Energy)
+#
+# `revenue_expected_from` is the earliest inferred stage at which the absence
+# of revenue counts as a negative financing signal for this sector.
+version: 1
+
+default_sector: unknown
+
+sectors:
+  saas:
+    label: "SaaS"
+    keywords: ["saas", "software as a service", "subscription software", "b2b software", "cloud platform", "arr", "mrr", "seat", "per-seat"]
+    traction_mode: revenue
+    capital_intensity: low
+    regulated: false
+    revenue_expected_from: "Seed"
+    probability_modifier: {p3: 1.02, p6: 1.02, p12: 1.01}
+    note: "Broad investor pool and short diligence cycles."
+  ai:
+    label: "AI"
+    keywords: ["artificial intelligence", "machine learning", "deep learning", "llm", "large language model", "foundation model", "generative ai", "neural network", "computer vision", "nlp"]
+    traction_mode: revenue
+    capital_intensity: medium
+    regulated: false
+    revenue_expected_from: "Series A"
+    probability_modifier: {p3: 1.06, p6: 1.05, p12: 1.03}
+    note: "Elevated investor appetite compresses financing timelines."
+  fintech:
+    label: "FinTech"
+    keywords: ["fintech", "payments", "lending", "neobank", "banking", "insurtech", "wealth management", "financial services", "kyc", "compliance platform"]
+    traction_mode: revenue
+    capital_intensity: medium
+    regulated: true
+    revenue_expected_from: "Seed"
+    probability_modifier: {p3: 0.98, p6: 0.99, p12: 1.0}
+    note: "Licensing and compliance requirements extend diligence."
+  healthtech:
+    label: "HealthTech"
+    keywords: ["healthtech", "digital health", "telehealth", "telemedicine", "patient engagement", "ehr", "electronic health record", "care management", "health platform"]
+    traction_mode: hybrid
+    capital_intensity: medium
+    regulated: true
+    revenue_expected_from: "Series A"
+    probability_modifier: {p3: 0.96, p6: 0.97, p12: 0.99}
+    note: "Health system sales cycles slow revenue proof."
+  medtech:
+    label: "MedTech"
+    keywords: ["medtech", "medical device", "medical devices", "diagnostic", "diagnostics", "fda clearance", "fda approval", "fda", "510(k)", "510k", "pma", "de novo", "ce mark", "point of care", "in vitro", "patients", "clinician", "clinicians", "ventilator", "ventilation", "resuscitation", "resuscitator", "emergency medical", "paramedic", "ems", "intubation", "catheter", "implant", "surgical"]
+    traction_mode: hybrid
+    capital_intensity: high
+    regulated: true
+    revenue_expected_from: "Series B"
+    probability_modifier: {p3: 0.90, p6: 0.93, p12: 0.96}
+    note: "Regulatory clearance gates commercial traction and investor entry."
+  biotech:
+    label: "Biotech"
+    keywords: ["biotech", "therapeutic", "therapeutics", "drug", "preclinical", "clinical trial", "phase i", "phase ii", "phase 1", "phase 2", "ind", "orphan", "molecule", "compound", "oncology"]
+    traction_mode: milestone
+    capital_intensity: high
+    regulated: true
+    revenue_expected_from: "Growth"
+    probability_modifier: {p3: 0.85, p6: 0.90, p12: 0.95}
+    note: "Milestone-driven financing; specialist investor pool and long diligence."
+  life_sciences:
+    label: "Life Sciences"
+    keywords: ["life science", "life sciences", "biosciences", "genomics", "proteomics", "bioinformatics", "lab automation", "research tools", "reagent"]
+    traction_mode: milestone
+    capital_intensity: high
+    regulated: true
+    revenue_expected_from: "Series B"
+    probability_modifier: {p3: 0.88, p6: 0.92, p12: 0.96}
+    note: "Scientific validation precedes commercial proof."
+  consumer:
+    label: "Consumer"
+    keywords: ["consumer", "d2c", "dtc", "direct to consumer", "retail brand", "e-commerce", "ecommerce", "mobile app", "subscription box"]
+    traction_mode: revenue
+    capital_intensity: medium
+    regulated: false
+    revenue_expected_from: "Pre-Seed"
+    probability_modifier: {p3: 0.94, p6: 0.95, p12: 0.97}
+    note: "Investor appetite is selective; unit economics are scrutinised early."
+  marketplace:
+    label: "Marketplace"
+    keywords: ["marketplace", "two-sided", "two sided", "gmv", "take rate", "supply and demand", "platform network"]
+    traction_mode: revenue
+    capital_intensity: medium
+    regulated: false
+    revenue_expected_from: "Seed"
+    probability_modifier: {p3: 0.97, p6: 0.98, p12: 0.99}
+    note: "Liquidity proof required before institutional rounds."
+  deeptech:
+    label: "DeepTech"
+    keywords: ["deeptech", "deep tech", "quantum", "photonics", "semiconductor", "advanced materials", "robotics", "frontier technology", "novel physics"]
+    traction_mode: hybrid
+    capital_intensity: high
+    regulated: false
+    revenue_expected_from: "Series B"
+    probability_modifier: {p3: 0.89, p6: 0.92, p12: 0.96}
+    note: "Technical de-risking drives financing more than early revenue."
+  defense:
+    label: "Defense"
+    keywords: ["defense", "defence", "military", "dod", "warfighter", "tactical", "national security", "sbir", "govcon"]
+    traction_mode: hybrid
+    capital_intensity: high
+    regulated: true
+    revenue_expected_from: "Series A"
+    probability_modifier: {p3: 0.92, p6: 0.95, p12: 0.98}
+    note: "Programme-of-record timing governs revenue recognition."
+  aerospace:
+    label: "Aerospace"
+    keywords: ["aerospace", "space", "satellite", "launch vehicle", "orbital", "avionics", "uav", "drone", "propulsion"]
+    traction_mode: hybrid
+    capital_intensity: high
+    regulated: true
+    revenue_expected_from: "Series B"
+    probability_modifier: {p3: 0.87, p6: 0.91, p12: 0.95}
+    note: "Hardware milestones and long build cycles gate financing."
+  climatetech:
+    label: "ClimateTech"
+    keywords: ["climatetech", "climate tech", "carbon", "decarbonisation", "decarbonization", "net zero", "emissions", "sustainability", "circular economy"]
+    traction_mode: hybrid
+    capital_intensity: high
+    regulated: true
+    revenue_expected_from: "Series A"
+    probability_modifier: {p3: 0.93, p6: 0.95, p12: 0.98}
+    note: "Policy and offtake dependencies influence investor timing."
+  energy:
+    label: "Energy"
+    keywords: ["energy", "battery", "solar", "wind", "grid", "storage", "hydrogen", "nuclear", "fuel cell", "power generation"]
+    traction_mode: hybrid
+    capital_intensity: high
+    regulated: true
+    revenue_expected_from: "Series B"
+    probability_modifier: {p3: 0.88, p6: 0.91, p12: 0.95}
+    note: "Project finance dynamics and long build cycles extend timelines."
+  hardware:
+    label: "Hardware"
+    keywords: ["hardware", "device", "iot", "sensor", "embedded", "electronics", "prototype tooling", "bill of materials", "bom"]
+    traction_mode: hybrid
+    capital_intensity: high
+    regulated: false
+    revenue_expected_from: "Series A"
+    probability_modifier: {p3: 0.90, p6: 0.93, p12: 0.96}
+    note: "Tooling and inventory needs raise the capital bar."
+  manufacturing:
+    label: "Manufacturing"
+    keywords: ["manufacturing", "factory", "production line", "industrial", "supply chain", "cnc", "fabrication", "assembly"]
+    traction_mode: hybrid
+    capital_intensity: high
+    regulated: false
+    revenue_expected_from: "Series A"
+    probability_modifier: {p3: 0.91, p6: 0.93, p12: 0.96}
+    note: "Capex intensity narrows the investor pool."
+  proptech:
+    label: "PropTech"
+    keywords: ["proptech", "real estate", "property management", "construction tech", "contech", "building management"]
+    traction_mode: revenue
+    capital_intensity: medium
+    regulated: false
+    revenue_expected_from: "Seed"
+    probability_modifier: {p3: 0.94, p6: 0.95, p12: 0.97}
+    note: "Cyclical investor appetite tied to property markets."
+  agtech:
+    label: "AgTech"
+    keywords: ["agtech", "agriculture", "farming", "crop", "precision ag", "livestock", "soil", "irrigation"]
+    traction_mode: hybrid
+    capital_intensity: high
+    regulated: true
+    revenue_expected_from: "Series A"
+    probability_modifier: {p3: 0.90, p6: 0.93, p12: 0.96}
+    note: "Seasonal sales cycles slow commercial validation."
+  foodtech:
+    label: "FoodTech"
+    keywords: ["foodtech", "food tech", "alternative protein", "beverage", "cpg", "food safety", "fermentation", "cultivated meat"]
+    traction_mode: hybrid
+    capital_intensity: high
+    regulated: true
+    revenue_expected_from: "Series A"
+    probability_modifier: {p3: 0.89, p6: 0.92, p12: 0.95}
+    note: "Scale-up capex and retail listings gate revenue."
+  unknown:
+    label: "Not Provided"
+    keywords: []
+    traction_mode: hybrid
+    capital_intensity: medium
+    regulated: false
+    revenue_expected_from: "Series A"
+    probability_modifier: {p3: 1.0, p6: 1.0, p12: 1.0}
+    note: "Sector could not be determined from the deck."
+
+# ---------------------------------------------------------------------------
+# Stage benchmarks used for round-size and valuation sanity checks, and for
+# model-inferred stage classification. Amounts in USD.
+# ---------------------------------------------------------------------------
+stage_order: ["Pre-Seed", "Seed", "Series A", "Series B", "Series C+", "Growth"]
+
+stage_benchmarks:
+  "Pre-Seed":
+    raise_typical: [250000, 1500000]
+    pre_money_typical: [1500000, 8000000]
+    prior_funding_max: 500000
+    revenue_typical: [0, 150000]
+    headcount_typical: [1, 8]
+  "Seed":
+    raise_typical: [1000000, 5000000]
+    pre_money_typical: [5000000, 25000000]
+    prior_funding_max: 3000000
+    revenue_typical: [0, 1500000]
+    headcount_typical: [3, 25]
+  "Series A":
+    raise_typical: [5000000, 20000000]
+    pre_money_typical: [20000000, 80000000]
+    prior_funding_max: 12000000
+    revenue_typical: [1000000, 8000000]
+    headcount_typical: [15, 70]
+  "Series B":
+    raise_typical: [15000000, 50000000]
+    pre_money_typical: [60000000, 250000000]
+    prior_funding_max: 45000000
+    revenue_typical: [5000000, 30000000]
+    headcount_typical: [50, 200]
+  "Series C+":
+    raise_typical: [30000000, 150000000]
+    pre_money_typical: [150000000, 800000000]
+    prior_funding_max: 200000000
+    revenue_typical: [20000000, 120000000]
+    headcount_typical: [120, 600]
+  "Growth":
+    raise_typical: [50000000, 400000000]
+    pre_money_typical: [300000000, 3000000000]
+    prior_funding_max: 1000000000
+    revenue_typical: [50000000, 1000000000]
+    headcount_typical: [200, 5000]
+
+# Multiplier applied to `raise_typical` / `pre_money_typical` for capital
+# intensity, so a hardware seed round is not flagged as oversized simply for
+# being larger than a SaaS seed round.
+capital_intensity_multiplier:
+  low: 1.0
+  medium: 1.25
+  high: 1.8
+
+# ---------------------------------------------------------------------------
+# Comparable financing profiles. The first entry whose conditions all match is
+# selected; `default` is used when nothing matches. These are qualitative
+# classifications, NOT claims about specific comparable transactions.
+# ---------------------------------------------------------------------------
+comparable_profiles:
+  rules:
+    - id: highly_fundable_seed
+      label: "Highly Fundable Seed Company"
+      when: {stages: ["Pre-Seed", "Seed"], min_readiness: 78}
+      rationale: "Seed-stage company with above-benchmark readiness, evidenced traction and visible round momentum."
+    - id: competitive_seed
+      label: "Competitive Seed Raise"
+      when: {stages: ["Pre-Seed", "Seed"], min_readiness: 55}
+      rationale: "Credible seed profile that will compete for capital against a deep field of similar companies."
+    - id: institutional_series_a
+      label: "Institutional Series A Ready"
+      when: {stages: ["Series A", "Series B", "Series C+", "Growth"], min_readiness: 75}
+      rationale: "Revenue scale, team completeness and round structure align with institutional Series A underwriting standards."
+    - id: emerging_series_a
+      label: "Emerging Series A Candidate"
+      when: {stages: ["Series A", "Series B", "Series C+", "Growth"], min_readiness: 55}
+      rationale: "Approaching Series A benchmarks but still assembling the commercial evidence institutional leads require."
+    - id: milestone_life_science
+      label: "Milestone-Dependent Life Science Raise"
+      when: {traction_modes: ["milestone"], min_readiness: 0}
+      rationale: "Financing is gated by scientific and regulatory milestones rather than commercial revenue, drawing on a specialist investor pool."
+    - id: early_commercial_medtech
+      label: "Early Commercial MedTech Raise"
+      when: {sectors: ["medtech", "healthtech"], min_readiness: 45}
+      rationale: "Regulatory progress and early commercial evidence position the round with device- and health-focused investors."
+    - id: capital_intensive_deeptech
+      label: "Capital-Intensive DeepTech Raise"
+      when: {capital_intensities: ["high"], min_readiness: 45}
+      rationale: "Technical de-risking and capital intensity define the raise, narrowing the round to specialist and strategic investors."
+    - id: strategic_candidate
+      label: "Strong Strategic Financing Candidate"
+      when: {min_readiness: 70, requires_partnership: true}
+      rationale: "Commercial partnerships and sector positioning make strategic or corporate capital a realistic path to closing."
+    - id: bridge_candidate
+      label: "Bridge Financing Candidate"
+      when: {max_readiness: 54, max_runway_months: 9}
+      rationale: "Limited runway against material readiness gaps points toward a bridge before a priced institutional round."
+    - id: challenged
+      label: "Venture Financing Challenged"
+      when: {max_readiness: 44}
+      rationale: "Current evidence falls short of the thresholds most venture investors apply at this stage."
+  default:
+    id: competitive_seed
+    label: "Competitive Seed Raise"
+    rationale: "Profile sits within the broad middle of the venture financing market for its stage."

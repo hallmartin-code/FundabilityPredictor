@@ -1,0 +1,30 @@
+# Startup Financing Probability Predictor - runtime dependencies.
+# Python 3.11 or newer.
+
+# Document ingestion
+pdfplumber>=0.11,<1.0          # primary PDF text and table extraction
+pypdf>=5.0                     # PDF fallback reader and page-count assertions
+python-pptx>=1.0,<2.0          # .pptx / .pptm slides, tables, notes and charts
+
+# Modelling and configuration
+pydantic>=2.7,<3.0             # typed models with validation
+PyYAML>=6.0,<7.0               # scoring weights, sector rules, probability rules
+
+# Reporting
+reportlab>=4.0                 # one-page PDF generation
+
+# Claude extraction (optional at runtime; the app falls back to rules-only
+# extraction when ANTHROPIC_API_KEY is absent)
+anthropic>=0.116.0
+
+# Web app
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9        # multipart form uploads
+jinja2>=3.1                    # HTML templates
+
+# Notes:
+# * Legacy binary .ppt requires LibreOffice ("soffice" on PATH). See
+#   nixpacks.toml to enable it on Railway.
+# * No credential is ever hard-coded. ANTHROPIC_API_KEY is read from the
+#   environment; see .env.example.

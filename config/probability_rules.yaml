@@ -1,0 +1,267 @@
+# Financing probability model.
+#
+# Pipeline:  readiness score -> baseline band (interpolated)
+#            -> signal adjustments -> sector modifier -> market modifier
+#            -> clamp -> monotonicity enforcement
+#
+# Every rule id below maps to a detector function registered in
+# analysis/probability_model.py (SIGNAL_DETECTORS). Config controls the
+# magnitude and whether a rule is enabled; code controls detection, so a
+# malformed config can never invent a signal that is not in the data.
+version: 1
+
+# Final probabilities are always clamped into this range. We never present
+# 0% or 100% certainty about a financing outcome.
+clamp:
+  min: 1.0
+  max: 98.0
+
+# Signal deltas below are expressed as percentage points, which reads well in
+# the probability bridge but compounds badly near the ends of the scale: six
+# negative signals worth -5 each would drive a 20% baseline straight through
+# zero and into the clamp, which is a reporting artefact rather than a real
+# finding.
+#
+# Damping scales each delta by how much room is left in the direction it
+# pushes: a negative delta is scaled by running/(running + half_saturation),
+# a positive one by (100 - running)/((100 - running) + half_saturation). At
+# mid-range this leaves deltas nearly intact (~86% at 50%); near the ends it
+# shrinks them. The bridge always displays the *applied* value, so the
+# arithmetic the reader sees is the arithmetic the model performed.
+adjustment_damping:
+  enabled: true
+  half_saturation: 8.0
+
+# Baseline probability bands. Within a band the baseline is linearly
+# interpolated between `low` and `high` by the score position in the band.
+baseline_bands:
+  - {min: 85, max: 100, p3: [60, 85], p6: [80, 95], p12: [90, 98]}
+  - {min: 70, max: 84,  p3: [35, 60], p6: [60, 80], p12: [75, 90]}
+  - {min: 55, max: 69,  p3: [15, 35], p6: [35, 60], p12: [55, 75]}
+  - {min: 40, max: 54,  p3: [5, 20],  p6: [20, 40], p12: [35, 60]}
+  - {min: 0,  max: 39,  p3: [1, 10],  p6: [5, 25],  p12: [15, 40]}
+
+# ---------------------------------------------------------------------------
+# Signal adjustments (percentage points added to each horizon).
+# ---------------------------------------------------------------------------
+positive_signals:
+  lead_investor_committed:
+    label: "Lead investor committed"
+    enabled: true
+    delta: {p3: 9, p6: 8, p12: 5}
+  round_25_committed:
+    label: "25%+ of round committed"
+    enabled: true
+    threshold: 25
+    delta: {p3: 6, p6: 5, p12: 3}
+  round_50_committed:
+    label: "50%+ of round committed"
+    enabled: true
+    threshold: 50
+    delta: {p3: 8, p6: 7, p12: 4}
+  round_75_committed:
+    label: "75%+ of round committed"
+    enabled: true
+    threshold: 75
+    delta: {p3: 6, p6: 4, p12: 2}
+  rapid_revenue_growth:
+    label: "Rapid revenue growth"
+    enabled: true
+    threshold_pct: 80
+    delta: {p3: 5, p6: 6, p12: 4}
+  strong_recurring_revenue:
+    label: "Strong recurring revenue base"
+    enabled: true
+    threshold_arr: 1000000
+    delta: {p3: 4, p6: 5, p12: 3}
+  multiple_paying_customers:
+    label: "Multiple paying customers"
+    enabled: true
+    threshold: 10
+    delta: {p3: 3, p6: 3, p12: 2}
+  high_gross_margin:
+    label: "High gross margin"
+    enabled: true
+    threshold_pct: 70
+    delta: {p3: 2, p6: 3, p12: 2}
+  strategic_investor:
+    label: "Strategic / corporate investor participation"
+    enabled: true
+    delta: {p3: 4, p6: 4, p12: 3}
+  repeat_founder:
+    label: "Experienced repeat founder"
+    enabled: true
+    delta: {p3: 3, p6: 4, p12: 3}
+  prior_exit:
+    label: "Founder with prior successful exit"
+    enabled: true
+    delta: {p3: 5, p6: 5, p12: 4}
+  strong_retention:
+    label: "Strong customer retention"
+    enabled: true
+    threshold_pct: 90
+    delta: {p3: 2, p6: 3, p12: 2}
+  regulatory_milestone:
+    label: "Regulatory milestone achieved"
+    enabled: true
+    delta: {p3: 4, p6: 5, p12: 4}
+  major_partnership:
+    label: "Major commercial partnership"
+    enabled: true
+    delta: {p3: 3, p6: 4, p12: 3}
+  strong_runway:
+    label: "Strong runway (12m+)"
+    enabled: true
+    threshold_months: 12
+    delta: {p3: 1, p6: 3, p12: 5}
+  round_size_appropriate:
+    label: "Round size appropriate for stage"
+    enabled: true
+    delta: {p3: 2, p6: 3, p12: 2}
+  non_dilutive_funding:
+    label: "Non-dilutive funding secured"
+    enabled: true
+    delta: {p3: 2, p6: 3, p12: 3}
+
+negative_signals:
+  no_revenue_late_stage:
+    label: "No revenue at a late stage"
+    enabled: true
+    delta: {p3: -8, p6: -10, p12: -10}
+  no_customers:
+    label: "No customers identified"
+    enabled: true
+    delta: {p3: -5, p6: -6, p12: -5}
+  short_runway:
+    label: "Under 6 months runway"
+    enabled: true
+    threshold_months: 6
+    delta: {p3: -6, p6: -8, p12: -9}
+  excessive_valuation:
+    label: "Valuation above stage benchmark"
+    enabled: true
+    # multiple of the stage benchmark pre-money that triggers the flag
+    threshold_multiple: 2.0
+    delta: {p3: -6, p6: -7, p12: -6}
+  round_too_large:
+    label: "Round materially larger than stage norms"
+    enabled: true
+    threshold_multiple: 2.0
+    delta: {p3: -7, p6: -8, p12: -7}
+  weak_gross_margin:
+    label: "Weak gross margins"
+    enabled: true
+    threshold_pct: 30
+    delta: {p3: -3, p6: -4, p12: -3}
+  customer_concentration:
+    label: "Heavy customer concentration"
+    enabled: true
+    threshold_pct: 50
+    delta: {p3: -3, p6: -4, p12: -3}
+  unclear_use_of_funds:
+    label: "Use of funds not specified"
+    enabled: true
+    delta: {p3: -3, p6: -3, p12: -2}
+  no_lead_investor:
+    label: "No lead investor identified"
+    enabled: true
+    delta: {p3: -7, p6: -6, p12: -4}
+  limited_investor_traction:
+    label: "Limited investor traction (<10% committed)"
+    enabled: true
+    threshold: 10
+    delta: {p3: -6, p6: -5, p12: -3}
+  capital_intensive:
+    label: "Capital-intensive business model"
+    enabled: true
+    delta: {p3: -3, p6: -3, p12: -2}
+  long_regulatory_timeline:
+    label: "Long regulatory timeline ahead"
+    enabled: true
+    delta: {p3: -5, p6: -5, p12: -4}
+  unclear_business_model:
+    label: "Business model not clearly stated"
+    enabled: true
+    delta: {p3: -3, p6: -4, p12: -3}
+  weak_differentiation:
+    label: "Weak competitive differentiation"
+    enabled: true
+    delta: {p3: -3, p6: -4, p12: -3}
+  missing_financial_model:
+    label: "No financial model or forecast"
+    enabled: true
+    delta: {p3: -3, p6: -3, p12: -2}
+  founder_not_full_time:
+    label: "Founder not full time"
+    enabled: true
+    delta: {p3: -4, p6: -5, p12: -4}
+  legal_regulatory_dependency:
+    label: "Material legal or regulatory dependency"
+    enabled: true
+    delta: {p3: -4, p6: -4, p12: -3}
+  note_maturity_pressure:
+    label: "Convertible note maturity imminent"
+    enabled: true
+    threshold_months: 6
+    delta: {p3: -3, p6: -3, p12: -2}
+
+# ---------------------------------------------------------------------------
+# Capital market environment. Applied as a multiplier on the post-adjustment
+# probability. Default is `neutral` and is reported as an ASSUMPTION, never
+# as verified live market data.
+# ---------------------------------------------------------------------------
+market_conditions:
+  default: neutral
+  environments:
+    highly_favorable:
+      label: "Highly Favorable"
+      multiplier: {p3: 1.18, p6: 1.14, p12: 1.08}
+    favorable:
+      label: "Favorable"
+      multiplier: {p3: 1.09, p6: 1.07, p12: 1.04}
+    neutral:
+      label: "Neutral"
+      multiplier: {p3: 1.0, p6: 1.0, p12: 1.0}
+    difficult:
+      label: "Difficult"
+      multiplier: {p3: 0.88, p6: 0.90, p12: 0.94}
+    highly_difficult:
+      label: "Highly Difficult"
+      multiplier: {p3: 0.75, p6: 0.80, p12: 0.87}
+
+# Monotonicity: p3 <= p6 <= p12 is enforced after all modifiers.
+# `min_gap` keeps the horizons visually distinct when they collide.
+monotonicity:
+  enforce: true
+  min_gap: 0.0
+
+# Confidence model.
+confidence:
+  levels:
+    - {min: 80, level: "HIGH"}
+    - {min: 60, level: "MEDIUM"}
+    - {min: 0,  level: "LOW"}
+  # Weight of each component of the confidence score (must sum to 1.0).
+  components:
+    critical_field_completeness: 0.50
+    evidence_quality: 0.25
+    extraction_quality: 0.15
+    consistency: 0.10
+  # Fields whose absence most damages a financing prediction, with the
+  # relative weight of each within `critical_field_completeness`.
+  critical_fields:
+    target_raise: 3.0
+    amount_committed: 2.5
+    percent_committed: 2.0
+    annual_revenue: 2.5
+    prior_funding: 1.5
+    pre_money_valuation: 2.0
+    runway_months: 2.0
+    customers: 1.5
+    gross_margin: 1.0
+    burn_rate: 1.0
+    founders: 1.5
+    lead_investor: 1.5
+    use_of_funds: 1.0
+    sector: 1.0
+    stage_declared: 1.0

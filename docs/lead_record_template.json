@@ -1,0 +1,154 @@
+{
+  "schema_version": "1.0",
+  "generated_at": null,
+  "company": {
+    "name": null,
+    "website": null,
+    "sector": null,
+    "subsector": null,
+    "stage_declared": null,
+    "stage_inferred": null,
+    "geography": null
+  },
+  "financing": {
+    "target_raise": null,
+    "amount_committed": null,
+    "percent_committed": null,
+    "valuation": null,
+    "instrument": null,
+    "prior_funding": null,
+    "runway_months": null
+  },
+  "traction": {
+    "annual_revenue": null,
+    "arr": null,
+    "revenue_growth": null,
+    "gross_margin": null,
+    "customers": null
+  },
+  "prediction": {
+    "probability_3_months": null,
+    "probability_6_months": null,
+    "probability_12_months": null,
+    "financing_readiness_score": null,
+    "financing_readiness_label": null,
+    "confidence_score": null,
+    "confidence_level": null,
+    "comparable_profile": null,
+    "comparable_profile_rationale": null,
+    "stage_confidence": null,
+    "market_condition": null,
+    "market_condition_verified": null,
+    "baseline": {
+      "p3": null,
+      "p6": null,
+      "p12": null
+    },
+    "probability_bridge": [
+      {
+        "label": null,
+        "kind": null,
+        "delta": {
+          "p3": null,
+          "p6": null,
+          "p12": null
+        },
+        "running": {
+          "p3": null,
+          "p6": null,
+          "p12": null
+        }
+      }
+    ]
+  },
+  "readiness_breakdown": [
+    {
+      "category": null,
+      "label": null,
+      "weight": null,
+      "points": null,
+      "signals": [
+        {
+          "key": null,
+          "label": null,
+          "weight": null,
+          "awarded": null,
+          "evidenced": null,
+          "detail": null
+        }
+      ]
+    }
+  ],
+  "drivers": [
+    null
+  ],
+  "blockers": [
+    {
+      "severity": null,
+      "title": null,
+      "detail": null
+    }
+  ],
+  "recommended_actions": [
+    {
+      "action": null,
+      "why_it_matters": null,
+      "estimated_financing_impact": null,
+      "target_timeframe": null
+    }
+  ],
+  "ten_capital": {
+    "fit_score": null,
+    "raise_over_2m": null,
+    "twenty_five_percent_committed": null,
+    "fifty_percent_committed": null,
+    "revenue_over_700k": null,
+    "revenue_generating": null,
+    "lead_investor": null,
+    "institutional_round": null,
+    "runway_over_9_months": null,
+    "materials_complete": null,
+    "likely_fundraising_candidate": null,
+    "recommended_next_step": null,
+    "explanation": null
+  },
+  "evidence": {
+    "data_completeness_score": null,
+    "missing_critical_fields": [
+      null
+    ],
+    "estimated_fields": [],
+    "overridden_fields": [],
+    "confidence_components": {
+      "critical_field_completeness": null,
+      "evidence_quality": null,
+      "extraction_quality": null,
+      "consistency": null
+    },
+    "confidence_notes": [
+      null
+    ],
+    "extraction_warnings": [],
+    "inconsistencies": [
+      {
+        "code": null,
+        "severity": null,
+        "message": null,
+        "fields": [
+          null
+        ]
+      }
+    ],
+    "source_file": null,
+    "source_sha256": null,
+    "pages": null,
+    "extraction_engine": null,
+    "llm_extraction": null
+  },
+  "consent": {
+    "analysis_consent": null,
+    "ten_capital_contact_consent": null,
+    "timestamp": null
+  },
+  "disclaimer": "This report estimates financing probability based on company-supplied information, model assumptions, and available market context. It does not predict investor behavior with certainty and does not constitute investment, legal, tax, or securities advice."
+}

@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% block stage_class %}stage--wide{% endblock %}
+{% block content %}
+
+<div class="card" id="progress">
+  <div class="eyebrow">Analysing</div>
+  <h1 style="font-size:22px;margin-bottom:18px;">{{ job.filename }}</h1>
+  <div class="status" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
+    <span class="status-text" id="message">{{ job.message }}</span>
+  </div>
+  <div class="progress-track" aria-hidden="true"><div class="progress-bar"></div></div>
+  <p class="hint">Reading the deck page by page. This usually takes 30&ndash;90 seconds.</p>
+</div>
+
+<div class="card" id="failed" style="display:none">
+  <div class="eyebrow" style="color:var(--coral)">Failed</div>
+  <h1 style="font-size:22px;margin-bottom:16px;">Analysis could not be completed</h1>
+  <div class="notice notice--error" id="failure" role="alert"></div>
+  <p class="hint"><a href="/">Try another deck</a></p>
+</div>
+
+<div id="results" style="display:none">
+
+  <div class="card">
+    <div class="eyebrow">Financing probability</div>
+    <h1 style="font-size:24px;margin-bottom:6px;" id="company"></h1>
+    <p class="lede" style="margin-bottom:24px;font-size:14px;" id="identity"></p>
+
+    <div class="tiles" id="tiles"></div>
+
+    <div style="margin-top:24px">
+      <h2>Assessment</h2>
+      <dl class="kv" id="facts"></dl>
+    </div>
+  </div>
+
+  <div class="card card--tight">
+    <h2>Downloads</h2>
+    <div class="downloads" id="downloads"></div>
+    <p class="hint">Files are held for {{ retention_minutes }} minutes, then deleted along with the uploaded deck.</p>
+  </div>
+
+  <div class="card card--tight">
+    <h2>Probability drivers</h2>
+    <ul class="list list--bullets" id="drivers"></ul>
+  </div>
+
+  <div class="card card--tight">
+    <h2>Critical blockers</h2>
+    <ul class="list" id="blockers"></ul>
+  </div>
+
+  <div class="card card--tight">
+    <h2>Five actions to increase funding probability</h2>
+    <ul class="list" id="actions"></ul>
+  </div>
+
+  <div class="card card--tight">
+    <h2>TEN Capital readiness flags</h2>
+    <div class="flags" id="flags"></div>
+  </div>
+
+  <div class="card card--tight">
+    <h2>Extraction</h2>
+    <dl class="kv" id="extraction"></dl>
+    <p class="hint" id="verification"></p>
+  </div>
+
+  <div class="card card--tight" id="email-card" style="display:none">
+    <h2>Email notification</h2>
+    <div id="email-status"></div>
+  </div>
+
+  <p class="hint" style="text-align:center;margin-top:20px">
+    <a href="/">Analyse another deck</a>
+  </p>
+</div>
+
+{% endblock %}
+
+{% block footer_extra %}
+<div class="legal">
+  <p>Financing probability estimates are model-based assessments, not guarantees of financing outcomes.</p>
+  <p>This report estimates financing probability based on company-supplied information, model
+     assumptions, and available market context. It does not predict investor behavior with
+     certainty and does not constitute investment, legal, tax, or securities advice.</p>
+  <p class="confidential">CONFIDENTIAL — FOR INTENDED RECIPIENT ONLY</p>
+</div>
+
+<script>
+(function () {
+  const JOB_ID = {{ job.id | tojson }};
+  const LABELS = {{ labels | tojson }};
+  const EXTS   = { pdf: 'PDF', data: 'JSON', evidence: 'JSON', html: 'HTML' };
+
+  const el = (id) => document.getElementById(id);
+  const tone = (v) => (v >= 60 ? 'strong' : (v >= 30 ? 'moderate' : 'weak'));
+
+  function kv(target, key, value) {
+    const dt = document.createElement('dt'); dt.textContent = key;
+    const dd = document.createElement('dd'); dd.textContent = value;
+    target.append(dt, dd);
+  }
+
+  function li(target, html) {
+    const item = document.createElement('li');
+    item.innerHTML = html;
+    target.append(item);
+  }
+
+  const escape = (text) => {
+    const div = document.createElement('div');
+    div.textContent = text == null ? '' : text;
+    return div.innerHTML;
+  };
+
+  function render(job) {
+    const s = job.summary;
+    el('progress').style.display = 'none';
+    el('results').style.display = 'block';
+    document.title = `${s.company} — Financing Probability`;
+
+    el('company').textContent = s.company;
+    const stage = s.stage_declared === s.stage_inferred
+      ? s.stage_inferred
+      : `${s.stage_inferred} (declared ${s.stage_declared})`;
+    el('identity').textContent = `${s.sector}  ·  ${stage}`;
+
+    const tiles = el('tiles');
+    [['3 Months', s.p3], ['6 Months', s.p6], ['12 Months', s.p12]].forEach(([label, value]) => {
+      const div = document.createElement('div');
+      div.className = `tile tile--${tone(value)}`;
+      div.innerHTML = `<div class="v">${Math.round(value)}%</div><div class="l">${label}</div>`;
+      tiles.append(div);
+    });
+
+    const facts = el('facts');
+    kv(facts, 'Financing readiness', `${Math.round(s.readiness)}/100 — ${s.readiness_label}`);
+    kv(facts, 'Prediction confidence', `${s.confidence_level} (${Math.round(s.confidence)}/100)`);
+    kv(facts, 'Comparable profile', s.comparable);
+    kv(facts, 'TEN Capital fit', `${Math.round(s.fit_score)}/100`);
+    kv(facts, 'Recommended next step', s.next_step);
+    kv(facts, 'Market condition', s.market_condition);
+
+    const downloads = el('downloads');
+    job.downloads.forEach((kind) => {
+      const a = document.createElement('a');
+      a.className = 'download';
+      a.href = `/download/${job.id}/${kind}`;
+      a.innerHTML =
+        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+           <path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
+         </svg>
+         <span>${escape(LABELS[kind] || kind)}</span>
+         <span class="ext">${EXTS[kind] || ''}</span>`;
+      downloads.append(a);
+    });
+
+    const drivers = el('drivers');
+    if (s.drivers && s.drivers.length) {
+      s.drivers.forEach((d) => li(drivers, escape(d)));
+    } else {
+      li(drivers, '<span class="meta">No positive financing signals were evidenced in the deck.</span>');
+    }
+
+    const blockers = el('blockers');
+    if (s.blockers.length) {
+      s.blockers.forEach((b) => li(blockers,
+        `<span class="sev sev-${escape(b.severity)}">${escape(b.severity)}</span>
+         <strong>${escape(b.title)}</strong><br>${escape(b.detail || '')}`));
+    } else {
+      li(blockers, '<span class="meta">No structural blockers identified.</span>');
+    }
+
+    const actions = el('actions');
+    s.actions.forEach((a, index) => li(actions,
+      `<strong>${index + 1}.</strong> ${escape(a.action)}
+       <span class="meta">[${escape(a.impact)} · ${escape(a.timeframe)}]</span>`));
+
+    const flags = el('flags');
+    (s.flags || []).forEach((f) => {
+      const row = document.createElement('div');
+      row.className = 'flag';
+      row.innerHTML = `<span>${escape(f.label)}</span>
+                       <span class="flag-${escape(f.value)}">${escape(f.value)}</span>`;
+      flags.append(row);
+    });
+
+    const extraction = el('extraction');
+    kv(extraction, 'Fields found', `${s.fields_found} of ${s.fields_total}`);
+    if (s.llm) {
+      kv(extraction, 'Extraction engine', `Rules + ${s.llm.model}`);
+      kv(extraction, 'Accepted from Claude', `${s.llm.fields_accepted} of ${s.llm.fields_proposed} proposed`);
+      kv(extraction, 'Tokens', `${s.llm.input_tokens} in / ${s.llm.output_tokens} out`);
+      kv(extraction, 'Estimated API cost', `$${s.llm.estimated_cost_usd.toFixed(3)}`);
+
+      const rejected   = s.llm.rejected_unverified || [];
+      const downgraded = s.llm.downgraded_to_estimated || [];
+      const parts = [];
+      if (rejected.length) {
+        parts.push(`<strong>${rejected.length}</strong> value(s) were discarded because the quote
+                    could not be located in the deck (${escape(rejected.join(', '))}).`);
+      }
+      if (downgraded.length) {
+        parts.push(`<strong>${downgraded.length}</strong> were recorded as estimates rather than
+                    stated facts (${escape(downgraded.join(', '))}).`);
+      }
+      if (!parts.length) parts.push('Every accepted value was verified against a quote in the source.');
+      el('verification').innerHTML = parts.join(' ');
+    } else {
+      kv(extraction, 'Extraction engine', 'Rules only (deterministic)');
+      el('verification').textContent = 'Claude extraction was not used for this run.';
+    }
+
+    // The report is downloadable regardless, so a mail failure is a note,
+    // not a failed analysis.
+    const mail = s.email;
+    if (mail && (mail.sent || mail.error)) {
+      el('email-card').style.display = 'block';
+      const box = document.createElement('div');
+      if (mail.sent) {
+        box.className = 'notice notice--ok';
+        box.innerHTML = `Results emailed to <strong>${escape(mail.recipients.join(', '))}</strong>.`;
+        if (mail.attachments_dropped && mail.attachments_dropped.length) {
+          box.innerHTML += ` Some attachments were too large to send:
+                             ${escape(mail.attachments_dropped.join(', '))}.`;
+        }
+      } else {
+        box.className = 'notice notice--warn';
+        box.innerHTML = `The notification email could not be sent: ${escape(mail.error)}
+                         <br>The report above is unaffected.`;
+      }
+      el('email-status').append(box);
+    }
+  }
+
+  function fail(job) {
+    el('progress').style.display = 'none';
+    el('failed').style.display = 'block';
+    el('failure').textContent = job.error || 'Unknown error.';
+  }
+
+  async function poll() {
+    try {
+      const response = await fetch(`/api/job/${JOB_ID}`);
+      if (!response.ok) throw new Error('This job has expired.');
+      const job = await response.json();
+      el('message').textContent = job.message;
+      if (job.state === 'done')   return render(job);
+      if (job.state === 'failed') return fail(job);
+    } catch (err) {
+      return fail({ error: err.message });
+    }
+    setTimeout(poll, 2000);
+  }
+  poll();
+})();
+</script>
+{% endblock %}

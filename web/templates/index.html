@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <div class="eyebrow">Deck Analyzer</div>
+  <h1>Pitch Deck<span class="arrow">&rarr;</span><span class="to">Financing Probability</span></h1>
+  <p class="lede">
+    Upload a pitch deck and get a polished single-page investor PDF: the probability of
+    closing the round in 3, 6 and 12 months, read from the deck by Claude and scored by a
+    deterministic model.
+  </p>
+
+  <form id="form" novalidate>
+    <label class="dropzone" id="dropzone" for="deck-upload">
+      <div class="dropzone-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-100)" stroke-width="1.6"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
+          <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/>
+        </svg>
+      </div>
+      <div class="dropzone-title" id="dz-title">Drop a deck here, or click to choose</div>
+      <div class="dropzone-sub" id="dz-sub">
+        {% for ext in extensions %}<b>{{ ext }}</b>{% if not loop.last %} &middot; {% endif %}{% endfor %}
+        &nbsp;&middot;&nbsp; up to {{ max_mb }}&nbsp;MB
+      </div>
+      <input class="file-input" type="file" id="deck-upload" name="deck"
+             accept="{{ extensions | join(',') }}" required>
+    </label>
+
+    <div class="options">
+      <div class="options-grid">
+        <div class="field">
+          <label class="field-label" for="market">Capital market environment</label>
+          <select id="market" name="market">
+            <option value="neutral" selected>Neutral (default assumption)</option>
+            <option value="highly_favorable">Highly Favorable</option>
+            <option value="favorable">Favorable</option>
+            <option value="difficult">Difficult</option>
+            <option value="highly_difficult">Highly Difficult</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="page_size">Report page size</label>
+          <select id="page_size" name="page_size">
+            <option value="LETTER" selected>US Letter</option>
+            <option value="A4">A4</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="check">
+          <input type="checkbox" id="use_llm" name="use_llm" value="1"
+                 {% if llm_enabled %}checked{% else %}disabled{% endif %}>
+          <label for="use_llm">
+            Read the deck with Claude
+            {% if not llm_enabled %}&mdash; unavailable: no API key configured on this server{% endif %}
+          </label>
+        </div>
+        <p class="hint">
+          Claude finds fields a rule-based reader cannot, and every value it returns is checked
+          against a verbatim quote from the deck before it is accepted. Scoring stays
+          deterministic either way.
+        </p>
+      </div>
+
+      <div class="field">
+        <div class="check">
+          <input type="checkbox" id="analysis_consent" name="analysis_consent" value="1">
+          <label for="analysis_consent">The company consented to this analysis.</label>
+        </div>
+        <div class="check">
+          <input type="checkbox" id="contact_consent" name="contact_consent" value="1">
+          <label for="contact_consent">The company consented to TEN Capital contact.</label>
+        </div>
+        <p class="hint">
+          Left unticked, both are recorded as <code>null</code> &mdash; meaning nobody was asked.
+          Neither is ever recorded as consent given.
+        </p>
+      </div>
+    </div>
+
+    <button class="cta" type="submit" id="go">Generate financing report</button>
+    <div id="err" class="notice notice--error" style="display:none; margin-top:16px" role="alert"></div>
+  </form>
+
+  <div class="disclosure">
+    {% if email_enabled and email_to %}
+      The uploaded file is processed on this server and a copy of every report is emailed to
+      {% for address in email_to %}<code>{{ address }}</code>{% if not loop.last %}, {% endif %}{% endfor %}.
+    {% else %}
+      The uploaded file is processed on this server. Email notifications are not enabled,
+      so reports are available as downloads only.
+    {% endif %}
+    Uploads and generated reports are deleted after {{ retention_minutes }} minutes.
+  </div>
+</div>
+
+<div class="card card--tight">
+  <h2>What comes back</h2>
+  <ul class="list list--bullets">
+    <li><strong>One-page PDF report</strong> &mdash; probability of closing in 3, 6 and 12 months,
+        readiness score, drivers, blockers, five prioritised actions and the TEN Capital assessment.</li>
+    <li><strong>TEN Capital lead record</strong> &mdash; structured JSON including the probability
+        bridge showing how the number was reached.</li>
+    <li><strong>Extraction evidence map</strong> &mdash; all 81 fields with the page, quote and value
+        type behind each one.</li>
+  </ul>
+  <p class="hint">
+    Nothing is invented. A field the deck does not state is reported as <em>Not Provided</em> and
+    lowers the confidence score rather than being filled in.
+  </p>
+</div>
+
+<script>
+(function () {
+  const form      = document.getElementById('form');
+  const input     = document.getElementById('deck-upload');
+  const dropzone  = document.getElementById('dropzone');
+  const title     = document.getElementById('dz-title');
+  const sub       = document.getElementById('dz-sub');
+  const button    = document.getElementById('go');
+  const errorBox  = document.getElementById('err');
+
+  // Mirrors of the server's own limits, so the browser rejects an
+  // impossible upload before spending time on it.
+  const EXTENSIONS = {{ extensions | tojson }};
+  const MAX_BYTES  = {{ max_bytes }};
+  const DEFAULT_SUB = sub.innerHTML;
+
+  const showError = (text) => {
+    errorBox.textContent = text;
+    errorBox.style.display = 'block';
+  };
+  const clearError = () => { errorBox.style.display = 'none'; };
+
+  const humanSize = (bytes) => {
+    if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+    return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+  };
+
+  function validate(file) {
+    const dot = file.name.lastIndexOf('.');
+    const ext = dot === -1 ? '' : file.name.slice(dot).toLowerCase();
+    if (!EXTENSIONS.includes(ext)) {
+      return `Unsupported file type "${ext || 'none'}". Supported: ${EXTENSIONS.join(', ')}.`;
+    }
+    if (file.size === 0) return 'That file is empty.';
+    if (file.size > MAX_BYTES) {
+      return `That file is ${humanSize(file.size)}; the limit is ${humanSize(MAX_BYTES)}.`;
+    }
+    return null;
+  }
+
+  function present(file) {
+    const problem = file ? validate(file) : null;
+    if (!file) {
+      dropzone.classList.remove('has-file');
+      title.textContent = 'Drop a deck here, or click to choose';
+      sub.innerHTML = DEFAULT_SUB;
+      return;
+    }
+    if (problem) {
+      dropzone.classList.remove('has-file');
+      input.value = '';
+      title.textContent = 'Drop a deck here, or click to choose';
+      sub.innerHTML = DEFAULT_SUB;
+      showError(problem);
+      return;
+    }
+    clearError();
+    dropzone.classList.add('has-file');
+    title.textContent = file.name;
+    sub.textContent = humanSize(file.size) + ' — ready to analyse';
+  }
+
+  input.addEventListener('change', () => present(input.files[0]));
+
+  // Drag and drop, with the whole page as the drop target so a near-miss
+  // still lands.
+  ['dragenter', 'dragover'].forEach((event) => {
+    document.addEventListener(event, (e) => {
+      e.preventDefault();
+      dropzone.classList.add('is-dragging');
+    });
+  });
+  ['dragleave', 'drop'].forEach((event) => {
+    document.addEventListener(event, (e) => {
+      e.preventDefault();
+      if (event === 'drop' || e.relatedTarget === null) {
+        dropzone.classList.remove('is-dragging');
+      }
+    });
+  });
+  document.addEventListener('drop', (e) => {
+    const file = e.dataTransfer && e.dataTransfer.files[0];
+    if (!file) return;
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    input.files = transfer.files;
+    present(file);
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearError();
+
+    const file = input.files[0];
+    if (!file) return showError('Choose a pitch deck first.');
+    const problem = validate(file);
+    if (problem) return showError(problem);
+
+    button.disabled = true;
+    button.textContent = 'Uploading…';
+
+    try {
+      const response = await fetch('/analyse', { method: 'POST', body: new FormData(form) });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.detail || `Upload failed (${response.status}).`);
+      window.location.href = `/job/${payload.job_id}`;
+    } catch (err) {
+      showError(err.message);
+      button.disabled = false;
+      button.textContent = 'Generate financing report';
+    }
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+# Financing Readiness Score — category weights.
+# The nine categories sum to 100 points. Adjust freely; the scorer
+# renormalises each category's internal signals to the weight given here.
+version: 1
+
+categories:
+  traction_revenue:
+    label: "Traction & Revenue"
+    weight: 20
+    description: >
+      Revenue, revenue growth, customer adoption, commercial contracts,
+      pipeline quality, retention and market validation. Sector-aware:
+      capital-intensive sectors substitute milestone/validation evidence.
+  round_progress:
+    label: "Round Progress"
+    weight: 15
+    description: >
+      Percentage of round committed, lead investor status, existing
+      investor participation, syndicate formation and closing momentum.
+  market_opportunity:
+    label: "Market Opportunity"
+    weight: 10
+    description: "Market size, growth, sector attractiveness, investor interest, timing."
+  team:
+    label: "Team"
+    weight: 10
+    description: "Founder quality, domain experience, prior exits, commercial capability, completeness."
+  financial_quality:
+    label: "Financial Quality"
+    weight: 10
+    description: "Gross margin, burn, runway, capital efficiency, revenue quality, financial clarity."
+  financing_terms:
+    label: "Financing Terms"
+    weight: 10
+    description: "Valuation, round size, instrument, investor friendliness, dilution vs. maturity."
+  product_defensibility:
+    label: "Product & Defensibility"
+    weight: 10
+    description: "Differentiation, IP, technology advantage, switching costs, regulatory barriers."
+  investor_fit:
+    label: "Investor Fit"
+    weight: 10
+    description: "Match between the ask and normal investor expectations for stage/sector/geography/size."
+  fundraising_readiness:
+    label: "Fundraising Readiness"
+    weight: 5
+    description: "Investment story, milestones, use of funds, forecast, materials, financing strategy."
+
+# When a signal cannot be evaluated because the underlying data is missing,
+# the scorer awards `missing_data_credit` x the signal's weight rather than
+# zero. This stops a thin deck from being scored as an actively bad company,
+# while still costing it points relative to a fully evidenced deck.
+missing_data_credit: 0.35
+
+# Readiness score -> label bands (inclusive lower bound).
+readiness_labels:
+  - {min: 85, label: "HIGHLY FINANCEABLE"}
+  - {min: 70, label: "FINANCING READY"}
+  - {min: 55, label: "NEARLY READY"}
+  - {min: 40, label: "MATERIAL GAPS"}
+  - {min: 0,  label: "EARLY / HIGH RISK"}

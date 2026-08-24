@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[COMPANY NAME] - Financing Probability Report</title>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 28px; background: #EEF1F5; color: #101820;
+       font: 13px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+.sheet { max-width: 900px; margin: 0 auto; background: #fff; padding: 0 0 22px;
+         box-shadow: 0 2px 14px rgba(16,24,32,.12); border-radius: 4px; overflow: hidden; }
+header { background: #14213D; color: #fff; padding: 18px 26px; }
+header h1 { margin: 0; font-size: 26px; letter-spacing: -.4px; }
+header .meta { color: #C6D3E6; font-size: 12px; margin-top: 4px; }
+header .fin { font-weight: 700; font-size: 12px; margin-top: 6px; }
+main { padding: 20px 26px; }
+h2 { font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+     color: #14213D; margin: 22px 0 8px; }
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr) 1.1fr; gap: 10px; }
+.tile { border-radius: 5px; padding: 14px 12px; color: #fff; text-align: center; }
+.tile .v { font-size: 30px; font-weight: 700; line-height: 1; }
+.tile .l { font-size: 10px; letter-spacing: .06em; margin-top: 7px; }
+.badge { border: 1px solid #D5DAE2; background: #F4F6F9; border-radius: 5px; padding: 11px 13px; }
+.badge .s { font-size: 24px; font-weight: 700; color: #14213D; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+ul { margin: 0; padding-left: 17px; }
+li { margin-bottom: 6px; }
+.sev { font-weight: 700; font-size: 11px; }
+.CRITICAL { color: #9B1C1C; } .HIGH { color: #B03A2E; } .MODERATE { color: #B7791F; }
+.why { color: #4A5568; font-size: 12px; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; }
+td { padding: 3px 0; border-bottom: 1px solid #EDF0F4; }
+td.v { text-align: right; font-weight: 700; }
+.YES { color: #1B7F4B; } .NO { color: #B03A2E; }
+.REVIEW { color: #B7791F; } .UNKNOWN { color: #7A8699; }
+.bridge div { font-size: 12px; padding: 1px 0; }
+.pos { color: #1B7F4B; font-weight: 700; } .neg { color: #B03A2E; font-weight: 700; }
+footer { border-top: 1px solid #D5DAE2; margin: 22px 26px 0; padding-top: 10px;
+         color: #7A8699; font-size: 10px; }
+.conf { color: #9B1C1C; font-weight: 700; }
+</style></head>
+<body><div class="sheet">
+<header>
+  <h1>[COMPANY NAME]</h1>
+  <div class="meta">[SECTOR] &nbsp;|&nbsp; Not Provided &nbsp;|&nbsp; [GEOGRAPHY]</div>
+  <div class="fin">Target Raise Not Provided
+    &nbsp;·&nbsp; Committed Not Provided
+    &nbsp;·&nbsp; Valuation Not Provided</div>
+</header>
+<main>
+  <h2>Probability of Completing Round</h2>
+  <div class="tiles"><div class="tile" style="background:#B03A2E"><div class="v">0%</div><div class="l">3 Months</div></div><div class="tile" style="background:#B03A2E"><div class="v">0%</div><div class="l">6 Months</div></div><div class="tile" style="background:#B03A2E"><div class="v">0%</div><div class="l">12 Months</div></div>
+    <div class="badge">
+      <div style="font-size:10px;color:#7A8699">FINANCING READINESS</div>
+      <div class="s">0<span style="font-size:13px;color:#4A5568">/100</span></div>
+      <div style="font-size:11px;font-weight:700;color:#1F4E79">[READINESS LABEL]</div>
+      <div style="font-size:11px;margin-top:6px;color:#4A5568">Confidence
+        <b>[LEVEL]</b> (0)</div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h2>Probability Drivers</h2><ul><li>[Probability driver 1 of up to 5]</li><li>[Probability driver 2 of up to 5]</li><li>[Probability driver 3 of up to 5]</li><li>[Probability driver 4 of up to 5]</li><li>[Probability driver 5 of up to 5]</li></ul>
+      <h2>Critical Blockers</h2><ul><li><span class="sev CRITICAL">CRITICAL</span> <b>[Blocker 1 title]</b><br><span class="why">[Blocker 1 detail: one or two sentences naming the issue and quoting the company&#x27;s own figures]</span></li><li><span class="sev HIGH">HIGH</span> <b>[Blocker 2 title]</b><br><span class="why">[Blocker 2 detail: one or two sentences naming the issue and quoting the company&#x27;s own figures]</span></li><li><span class="sev HIGH">HIGH</span> <b>[Blocker 3 title]</b><br><span class="why">[Blocker 3 detail: one or two sentences naming the issue and quoting the company&#x27;s own figures]</span></li><li><span class="sev MODERATE">MODERATE</span> <b>[Blocker 4 title]</b><br><span class="why">[Blocker 4 detail: one or two sentences naming the issue and quoting the company&#x27;s own figures]</span></li><li><span class="sev MODERATE">MODERATE</span> <b>[Blocker 5 title]</b><br><span class="why">[Blocker 5 detail: one or two sentences naming the issue and quoting the company&#x27;s own figures]</span></li></ul>
+      <h2>Comparable Financing Profile</h2>
+      <p><b>[COMPARABLE FINANCING PROFILE]</b><br>
+         <span class="why">[One or two sentences explaining why the company fits this profile]</span></p>
+      <p class="why"><i>MARKET CONDITION ASSUMPTION: [ENVIRONMENT]</i></p>
+    </div>
+    <div>
+      <h2>Five Actions to Increase Funding Probability</h2><ol><li><b>[Action 1: a specific instruction naming the company&#x27;s own numbers, milestones or counterparties]</b> <span class="why">[HIGH · Immediate]</span><br><span class="why">[Why action 1 matters to closing this round]</span></li><li><b>[Action 2: a specific instruction naming the company&#x27;s own numbers, milestones or counterparties]</b> <span class="why">[HIGH · 30 Days]</span><br><span class="why">[Why action 2 matters to closing this round]</span></li><li><b>[Action 3: a specific instruction naming the company&#x27;s own numbers, milestones or counterparties]</b> <span class="why">[HIGH · 60 Days]</span><br><span class="why">[Why action 3 matters to closing this round]</span></li><li><b>[Action 4: a specific instruction naming the company&#x27;s own numbers, milestones or counterparties]</b> <span class="why">[MEDIUM · 60 Days]</span><br><span class="why">[Why action 4 matters to closing this round]</span></li><li><b>[Action 5: a specific instruction naming the company&#x27;s own numbers, milestones or counterparties]</b> <span class="why">[MEDIUM · 90 Days]</span><br><span class="why">[Why action 5 matters to closing this round]</span></li></ol>
+      <h2>TEN Capital Assessment</h2>
+      <p><b>Fit Score 0/100</b> ·
+         <b>[RECOMMENDED NEXT STEP]</b><br>
+         <span class="why">[One sentence explaining the recommended next step]</span></p>
+      <table><tr><td>Raise &gt;= $2M</td><td class="v YES">YES</td></tr><tr><td>&gt;= 25% committed</td><td class="v NO">NO</td></tr><tr><td>&gt;= 50% committed</td><td class="v UNKNOWN">UNKNOWN</td></tr><tr><td>Revenue &gt;= $700K</td><td class="v REVIEW">REVIEW</td></tr><tr><td>Revenue generating</td><td class="v YES">YES</td></tr><tr><td>Institutional round</td><td class="v NO">NO</td></tr><tr><td>Lead investor identified</td><td class="v UNKNOWN">UNKNOWN</td></tr><tr><td>Runway &gt;= 9 months</td><td class="v REVIEW">REVIEW</td></tr><tr><td>Investor materials complete</td><td class="v YES">YES</td></tr><tr><td>Likely fundraising candidate</td><td class="v NO">NO</td></tr></table>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div><h2>How the 6-Month Probability Was Reached</h2>
+      <div class="bridge"><div><b>Baseline: 0%</b></div><div><span class="pos">+1.0%</span> [Positive signal detected in the deck]</div><div><span class="neg">-1.0%</span> [Negative signal detected in the deck]</div><div><span class="neg">-1.0%</span> [SECTOR] sector financing dynamics</div><div><span class="pos">+1.0%</span> Capital market environment: [ENVIRONMENT]</div><div><b>Final 6-month probability: 0%</b></div></div></div>
+    <div><h2>What Limits Confidence</h2><ul><li>[Confidence note 1: what a specific missing input cost]</li><li>[Confidence note 2: what a specific missing input cost]</li><li>[Confidence note 3: what a specific missing input cost]</li><li>[Confidence note 4: what a specific missing input cost]</li><li>[Confidence note 5: what a specific missing input cost]</li></ul></div>
+  </div>
+</main>
+<footer>
+  <p>Financing probability estimates are model-based assessments, not guarantees of financing outcomes.</p>
+  <p>This report estimates financing probability based on company-supplied information, model assumptions, and available market context. It does not predict investor behavior with certainty and does not constitute investment, legal, tax, or securities advice.</p>
+  <p class="conf">CONFIDENTIAL - FOR INTENDED RECIPIENT ONLY</p>
+  <p>Compiled on 01 January 2000 by TEN Capital Network</p>
+</footer>
+</div></body></html>
