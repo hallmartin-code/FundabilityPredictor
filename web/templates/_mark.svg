@@ -1,8 +1,8 @@
 <svg class="brand-mark" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-  <path d="M50 6 C64 6 74 16 74 16" stroke="var(--amber)" stroke-width="11" stroke-linecap="round" fill="none"/>
-  <path d="M76 66 C76 82 63 92 63 92" stroke="var(--teal)" stroke-width="11" stroke-linecap="round" fill="none"/>
-  <path d="M24 66 C24 82 37 92 37 92" stroke="var(--coral)" stroke-width="11" stroke-linecap="round" fill="none" transform="rotate(180 50 79)"/>
-  <circle cx="50" cy="20" r="11" fill="var(--amber)"/>
-  <circle cx="78" cy="68" r="11" fill="var(--teal)"/>
-  <circle cx="22" cy="68" r="11" fill="var(--coral)"/>
+  <path d="M10.3 54.88 A40 40 0 0 1 54.88 10.3" stroke="#EE5A4E" stroke-width="11" stroke-linecap="round"/>
+  <path d="M65.63 13.18 A40 40 0 0 1 81.94 74.07" stroke="#F3A22A" stroke-width="11" stroke-linecap="round"/>
+  <path d="M74.07 81.94 A40 40 0 0 1 13.18 65.63" stroke="#35BEBB" stroke-width="11" stroke-linecap="round"/>
+  <circle cx="34.44" cy="34.44" r="9" fill="#EE5A4E"/>
+  <circle cx="71.25" cy="44.31" r="9" fill="#F3A22A"/>
+  <circle cx="44.31" cy="71.25" r="9" fill="#35BEBB"/>
 </svg>
